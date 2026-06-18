@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ore Sorter — Balance Metalúrgico</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #F7F6F3;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1E293B;
+    --muted: #6B7280;
+    --grid-line: #F3F4F6;
+    --navy: #1E3A5F;
+    --gold: #D4A843;
+    --slate: #94A3B8;
+    --red: #DC2626;
+    --green: #16A34A;
+    --yellow: #D97706;
+    --green-bg: #DCFCE7;
+    --yellow-bg: #FEF3C7;
+    --red-bg: #FEF2F2;
+    --font: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    --font-mono: 'Courier New', Courier, monospace;
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  /* HEADER */
+  #header {
+    background: var(--navy);
+    color: #fff;
+    padding: 18px 24px 14px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    border-bottom: 3px solid var(--gold);
+  }
+  #header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+  }
+  #header .subtitle {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 2px;
+    font-style: italic;
+  }
+  #badge {
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  /* FILTERS */
+  #filters {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: flex-end;
+  }
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .filter-group label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+  }
+  .filter-group select, .filter-group input {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 13px;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    outline: none;
+    min-width: 120px;
+    cursor: pointer;
+  }
+  .filter-group select:focus, .filter-group input:focus {
+    border-color: var(--navy);
+  }
+  #btn-clear {
+    padding: 6px 16px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: var(--font);
+    cursor: pointer;
+    margin-top: 15px;
+    transition: background 0.2s;
+  }
+  #btn-clear:hover { background: #2a4f80; }
+  /* MAIN */
+  #main { padding: 20px 24px; max-width: 1400px; margin: 0 auto; }
+  /* KPIs */
+  #kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 900px) { #kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { #kpi-grid { grid-template-columns: 1fr; } }
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    padding: 14px 16px;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .kpi-stripe {
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+    flex-shrink: 0;
+    margin-right: 12px;
+    margin-left: -16px;
+    min-height: 100%;
+  }
+  .kpi-content { flex: 1; }
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+    font-family: var(--font-mono);
+  }
+  .kpi-desc {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  /* CHARTS */
+  #charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 768px) { #charts-grid { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+  }
+  .chart-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--navy);
+    margin-bottom: 10px;
+  }
+  .chart-container {
+    position: relative;
+    width: 100%;
+  }
+  canvas {
+    display: block;
+    width: 100% !important;
+  }
+  .tooltip-overlay {
+    position: absolute;
+    background: rgba(15,30,55,0.92);
+    color: #fff;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    display: none;
+    z-index: 200;
+    white-space: nowrap;
+    font-family: var(--font);
+    line-height: 1.6;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+  #empty-msg {
+    display: none;
+    text-align: center;
+    color: var(--muted);
+    padding: 40px;
+    font-size: 15px;
+    font-style: italic;
+  }
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    font-size: 11px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>⛏ Dashboard Ore Sorter</h1>
+    <div class="subtitle">Balance Metalúrgico — Minas: Bonanza | Tenguel</div>
+  </div>
+  <div id="badge">0 ensayos activos</div>
+</div>
+
+<div id="filters">
+  <div class="filter-group">
+    <label>Mina</label>
+    <select id="f-mina">
+      <option value="">Todas</option>
+      <option value="Bonanza">Bonanza</option>
+      <option value="Tenguel">Tenguel</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Modelo</label>
+    <select id="f-modelo">
+      <option value="">Todos</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Desde</label>
+    <input type="date" id="f-desde">
+  </div>
+  <div class="filter-group">
+    <label>Hasta</label>
+    <input type="date" id="f-hasta">
+  </div>
+  <button id="btn-clear">✕ Limpiar filtros</button>
+</div>
+
+<div id="main">
+  <div class="section-title">Indicadores Clave de Rendimiento</div>
+  <div id="kpi-grid"></div>
+  <div class="section-title">Análisis Gráfico</div>
+  <div id="empty-msg">Sin datos para los filtros seleccionados.</div>
+  <div id="charts-grid"></div>
+</div>
+
+<footer>Dashboard Ore Sorter — Balance Metalúrgico Aurífero © 2026</footer>
+
+<script>
+const DATA = [
+  {codigo:"IM-SO-17",fecha:"2025-09-25",mina:"Bonanza",peso_inicial:55.48,peso_retenido:14.84,peso_rechazo:32.16,peso_rechazo_veta:17.2,ley_rv:8.79,peso_rechazo_caja:10.62,ley_rc:0.07,peso_selectado:8.48,peso_selectado_veta:1.1,ley_sv:0.349,peso_selectado_caja:5.32,ley_sc:0.01,ley_rechazo_calc:4.724235,ley_selectado_calc:0.051545,recuperacion_au_rechazo:0.9557,recuperacion_au_selectado:0.0443,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-18",fecha:"2025-09-29",mina:"Bonanza",peso_inicial:53.56,peso_retenido:4,peso_rechazo:24.6,peso_rechazo_veta:14.74,ley_rv:12.72,peso_rechazo_caja:2.04,ley_rc:0.33,peso_selectado:24.96,peso_selectado_veta:4.22,ley_sv:7.97,peso_selectado_caja:11.78,ley_sc:0.09,ley_rechazo_calc:7.649024,ley_selectado_calc:1.389968,recuperacion_au_rechazo:0.9557,recuperacion_au_selectado:0.0443,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-19",fecha:"2025-10-28",mina:"Bonanza",peso_inicial:65.36,peso_retenido:13.16,peso_rechazo:37.6,peso_rechazo_veta:26.98,ley_rv:2.89,peso_rechazo_caja:3.24,ley_rc:0.29,peso_selectado:14.6,peso_selectado_veta:6.66,ley_sv:1.67,peso_selectado_caja:4.7,ley_sc:0.5,ley_rechazo_calc:2.098718,ley_selectado_calc:0.922753,recuperacion_au_rechazo:0.8615,recuperacion_au_selectado:0.1385,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-20",fecha:"2025-11-07",mina:"Bonanza",peso_inicial:54,peso_retenido:6.72,peso_rechazo:25.24,peso_rechazo_veta:25.28,ley_rv:16.33,peso_rechazo_caja:2.96,ley_rc:0.48,peso_selectado:22.04,peso_selectado_veta:5.04,ley_sv:3.54,peso_selectado_caja:6.58,ley_sc:0.4,ley_rechazo_calc:16.412171,ley_selectado_calc:0.928929,recuperacion_au_rechazo:0.7854,recuperacion_au_selectado:0.2146,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-21",fecha:"2025-12-10",mina:"Bonanza",peso_inicial:96.8,peso_retenido:10.42,peso_rechazo:39.68,peso_rechazo_veta:23.84,ley_rv:1.48,peso_rechazo_caja:6.4,ley_rc:0.08,peso_selectado:46.7,peso_selectado_veta:19.04,ley_sv:0.93,peso_selectado_caja:13.74,ley_sc:0.16,ley_rechazo_calc:0.902097,ley_selectado_calc:0.426244,recuperacion_au_rechazo:0.6262,recuperacion_au_selectado:0.3738,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-22",fecha:"2026-01-28",mina:"Bonanza",peso_inicial:76.96,peso_retenido:9.44,peso_rechazo:62.18,peso_rechazo_veta:24.5,ley_rv:2.37,peso_rechazo_caja:24.22,ley_rc:0.11,peso_selectado:5.34,peso_selectado_veta:0.54,ley_sv:0.25,peso_selectado_caja:4.86,ley_sc:0.07,ley_rechazo_calc:0.976668,ley_selectado_calc:0.088989,recuperacion_au_rechazo:0.9943,recuperacion_au_selectado:0.0056,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-23",fecha:"2026-02-04",mina:"Bonanza",peso_inicial:33.3,peso_retenido:13.02,peso_rechazo:16.92,peso_rechazo_veta:14.84,ley_rv:3.57,peso_rechazo_caja:2.8,ley_rc:0.25,peso_selectado:3.36,peso_selectado_veta:2.84,ley_sv:1.77,peso_selectado_caja:0.52,ley_sc:0.22,ley_rechazo_calc:3.172506,ley_selectado_calc:1.530119,recuperacion_au_rechazo:0.9123,recuperacion_au_selectado:0.0877,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-24",fecha:"2026-02-10",mina:"Bonanza",peso_inicial:62.9,peso_retenido:5.5,peso_rechazo:29.46,peso_rechazo_veta:12.95,ley_rv:11.37,peso_rechazo_caja:12.16,ley_rc:0.07,peso_selectado:27.94,peso_selectado_veta:3.78,ley_sv:3.59,peso_selectado_caja:20.7,ley_sc:0.21,ley_rechazo_calc:5.026908,ley_selectado_calc:0.641274,recuperacion_au_rechazo:0.8921,recuperacion_au_selectado:0.1079,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-25",fecha:"2026-02-12",mina:"Bonanza",peso_inicial:96.18,peso_retenido:18.48,peso_rechazo:48.84,peso_rechazo_veta:38.12,ley_rv:4.2,peso_rechazo_caja:6.38,ley_rc:0.95,peso_selectado:28.86,peso_selectado_veta:6.3,ley_sv:0.62,peso_selectado_caja:18.42,ley_sc:0.08,ley_rechazo_calc:3.402232,ley_selectado_calc:0.186403,recuperacion_au_rechazo:0.9686,recuperacion_au_selectado:0.0314,modelo:"ONE_CLASS",confianza:0.5,num_pasadas:2},
+  {codigo:"IM-SO-27",fecha:"2026-02-26",mina:"Bonanza",peso_inicial:101,peso_retenido:31.78,peso_rechazo:28.7,peso_rechazo_veta:19.08,ley_rv:7.52,peso_rechazo_caja:9.62,ley_rc:0.45,peso_selectado:40.52,peso_selectado_veta:11.12,ley_sv:3.24,peso_selectado_caja:29.4,ley_sc:0.24,ley_rechazo_calc:5.150195,ley_selectado_calc:1.063297,recuperacion_au_rechazo:0.7747,recuperacion_au_selectado:0.2253,modelo:"BZA-V1-CH-0,43%",confianza:0.8,num_pasadas:1},
+  {codigo:"IM-SO-28",fecha:"2026-05-03",mina:"Bonanza",peso_inicial:96.18,peso_retenido:10.32,peso_rechazo:66,peso_rechazo_veta:21.92,ley_rv:3.87,peso_rechazo_caja:44.08,ley_rc:0.19,peso_selectado:19.86,peso_selectado_veta:2.54,ley_sv:0.71,peso_selectado_caja:17.32,ley_sc:0.33,ley_rechazo_calc:1.412206,ley_selectado_calc:0.3786,recuperacion_au_rechazo:0.9273,recuperacion_au_selectado:0.0727,modelo:"BZA-V1-CH-0,43%",confianza:0.9,num_pasadas:2},
+  {codigo:"IM-SO-29",fecha:"2026-03-17",mina:"Bonanza",peso_inicial:197.16,peso_retenido:34.27,peso_rechazo:135.94,peso_rechazo_veta:54.96,ley_rv:4.49,peso_rechazo_caja:80.976,ley_rc:0.47,peso_selectado:26.95,peso_selectado_veta:1.85,ley_sv:2.18,peso_selectado_caja:25.08,ley_sc:0.48,ley_rechazo_calc:2.095256,ley_selectado_calc:0.596341,recuperacion_au_rechazo:0.9465,recuperacion_au_selectado:0.0535,modelo:"BZA-V1-CH-0,43%",confianza:0.9,num_pasadas:2},
+  {codigo:"IM-SO-31",fecha:"2026-05-15",mina:"Tenguel",peso_inicial:30,peso_retenido:2.8,peso_rechazo:15.8,peso_rechazo_veta:6.86,ley_rv:3.96,peso_rechazo_caja:8.94,ley_rc:0.26,peso_selectado:11.4,peso_selectado_veta:2.38,ley_sv:2.99,peso_selectado_caja:9.02,ley_sc:0.15,ley_rechazo_calc:1.866456,ley_selectado_calc:0.742912,recuperacion_au_rechazo:0.7769,recuperacion_au_selectado:0.2231,modelo:"TNGL-V1-GRN35-0,4%-HR-WR",confianza:0.93,num_pasadas:2},
+  {codigo:"IM-SO-32",fecha:"2026-05-21",mina:"Tenguel",peso_inicial:83.46,peso_retenido:14.68,peso_rechazo:51.68,peso_rechazo_veta:32.44,ley_rv:1.6,peso_rechazo_caja:19.24,ley_rc:0.15,peso_selectado:17.1,peso_selectado_veta:6.52,ley_sv:0.59,peso_selectado_caja:10.58,ley_sc:0.09,ley_rechazo_calc:1.06,ley_selectado_calc:0.28,recuperacion_au_rechazo:0.92,recuperacion_au_selectado:0.08,modelo:"TNGL-V1-GRN35-0,4%-HR-WR",confianza:0.93,num_pasadas:2},
+];
+
+// ============ UTILITIES ============
+const avg = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+const safeDiv = (a,b) => b===0 ? 0 : a/b;
+const fmt1 = v => isNaN(v) ? 'N/A' : v.toFixed(1);
+const fmt2 = v => isNaN(v) ? 'N/A' : v.toFixed(2);
+
+// Semaphore helpers
+function semColor(val, green, yellow, dir='asc') {
+  // dir='asc': high is good. dir='desc': low is good.
+  if (dir === 'asc') {
+    if (val >= green) return {stripe:'#16A34A', bg:'#DCFCE7', text:'#14532D'};
+    if (val >= yellow) return {stripe:'#D97706', bg:'#FEF3C7', text:'#92400E'};
+    return {stripe:'#DC2626', bg:'#FEF2F2', text:'#7F1D1D'};
+  } else {
+    if (val <= green) return {stripe:'#16A34A', bg:'#DCFCE7', text:'#14532D'};
+    if (val <= yellow) return {stripe:'#D97706', bg:'#FEF3C7', text:'#92400E'};
+    return {stripe:'#DC2626', bg:'#FEF2F2', text:'#7F1D1D'};
+  }
+}
+const neutralSem = {stripe:'#94A3B8', bg:'#F8FAFC', text:'#334155'};
+
+// ============ FILTER STATE ============
+let filtered = [...DATA];
+
+function applyFilters() {
+  const mina = document.getElementById('f-mina').value;
+  const modelo = document.getElementById('f-modelo').value;
+  const desde = document.getElementById('f-desde').value;
+  const hasta = document.getElementById('f-hasta').value;
+  filtered = DATA.filter(d => {
+    if (mina && d.mina !== mina) return false;
+    if (modelo && d.modelo !== modelo) return false;
+    if (desde && d.fecha < desde) return false;
+    if (hasta && d.fecha > hasta) return false;
+    return true;
+  });
+  render();
+}
+
+// Populate model filter
+const modelos = [...new Set(DATA.map(d=>d.modelo))];
+const fModelo = document.getElementById('f-modelo');
+modelos.forEach(m => {
+  const o = document.createElement('option');
+  o.value = m; o.textContent = m;
+  fModelo.appendChild(o);
+});
+
+['f-mina','f-modelo','f-desde','f-hasta'].forEach(id =>
+  document.getElementById(id).addEventListener('change', applyFilters)
+);
+document.getElementById('btn-clear').addEventListener('click', () => {
+  ['f-mina','f-modelo'].forEach(id => document.getElementById(id).value='');
+  ['f-desde','f-hasta'].forEach(id => document.getElementById(id).value='');
+  applyFilters();
+});
+
+// ============ KPI RENDER ============
+function computeKPIs(data) {
+  if (!data.length) return null;
+  const recAu = avg(data.map(d=>d.recuperacion_au_rechazo*100));
+  const perdAu = avg(data.map(d=>d.recuperacion_au_selectado*100));
+  const ratio = avg(data.map(d=>safeDiv(d.ley_rechazo_calc, d.ley_selectado_calc)));
+  const efVeta = avg(data.map(d=>safeDiv(d.peso_rechazo_veta, d.peso_rechazo_veta+d.peso_selectado_veta)*100));
+  const efCaja = avg(data.map(d=>safeDiv(d.peso_selectado_caja, d.peso_rechazo_caja+d.peso_selectado_caja)*100));
+  const redMasa = avg(data.map(d=>safeDiv(d.peso_selectado, d.peso_inicial)*100));
+  const retenido = avg(data.map(d=>safeDiv(d.peso_retenido, d.peso_inicial)*100));
+  const contRec = avg(data.map(d=>safeDiv(d.peso_rechazo_caja, d.peso_rechazo)*100));
+  const dilSel = avg(data.map(d=>safeDiv(d.peso_selectado_veta, d.peso_selectado)*100));
+  return {recAu, perdAu, ratio, efVeta, efCaja, redMasa, retenido, contRec, dilSel};
+}
+
+function renderKPIs(kpis) {
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = '';
+  if (!kpis) return;
+  const cards = [
+    {
+      label:'Recuperación Au — Rechazo',
+      value: fmt1(kpis.recAu)+'%',
+      desc:'Promedio de recuperación de oro en zona de rechazo',
+      sem: semColor(kpis.recAu, 90, 75, 'asc')
+    },
+    {
+      label:'Pérdida Au — Selectado',
+      value: fmt1(kpis.perdAu)+'%',
+      desc:'Promedio de pérdida de oro en zona de selectado',
+      sem: semColor(kpis.perdAu, 10, 25, 'desc')
+    },
+    {
+      label:'Ratio de Enriquecimiento',
+      value: fmt2(kpis.ratio)+'×',
+      desc:'Ley rechazo / Ley selectado promedio',
+      sem: semColor(kpis.ratio, 5, 2, 'asc')
+    },
+    {
+      label:'Eficiencia Captura Veta',
+      value: fmt1(kpis.efVeta)+'%',
+      desc:'Veta capturada en rechazo / total veta',
+      sem: semColor(kpis.efVeta, 85, 70, 'asc')
+    },
+    {
+      label:'Eficiencia Descarte Caja',
+      value: fmt1(kpis.efCaja)+'%',
+      desc:'Caja descartada en selectado / total caja',
+      sem: semColor(kpis.efCaja, 80, 60, 'asc')
+    },
+    {
+      label:'Reducción de Masa',
+      value: fmt1(kpis.redMasa)+'%',
+      desc:'Masa selectada / masa inicial — informativo',
+      sem: neutralSem
+    },
+    {
+      label:'Material Retenido',
+      value: fmt1(kpis.retenido)+'%',
+      desc:'Masa retenida / masa inicial — informativo',
+      sem: neutralSem
+    },
+    {
+      label:'Contaminación Rechazo',
+      value: fmt1(kpis.contRec)+'%',
+      desc:'Caja en rechazo / total rechazo',
+      sem: semColor(kpis.contRec, 15, 30, 'desc')
+    },
+    {
+      label:'Dilución Selectado',
+      value: fmt1(kpis.dilSel)+'%',
+      desc:'Veta en selectado / total selectado',
+      sem: semColor(kpis.dilSel, 10, 20, 'desc')
+    },
+  ];
+  cards.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'kpi-card';
+    div.style.borderLeft = `4px solid ${c.sem.stripe}`;
+    div.style.background = c.sem.bg;
+    div.innerHTML = `
+      <div class="kpi-content">
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value" style="color:${c.sem.stripe}">${c.value}</div>
+        <div class="kpi-desc">${c.desc}</div>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+// ============ CANVAS CHART HELPERS ============
+const C = {
+  navy:'#1E3A5F', gold:'#D4A843', slate:'#94A3B8',
+  red:'#DC2626', green:'#16A34A', yellow:'#D97706',
+  orange:'#EA580C', teal:'#0D9488', purple:'#7C3AED',
+  grid:'#F3F4F6', axis:'#6B7280', text:'#1E293B'
+};
+const MODEL_COLORS = {
+  'ONE_CLASS': C.navy,
+  'BZA-V1-CH-0,43%': C.teal,
+  'TNGL-V1-GRN35-0,4%-HR-WR': C.gold
+};
+const MINA_COLORS = {'Bonanza': C.navy, 'Tenguel': C.gold};
+
+function makeCanvas(container, h) {
+  const c = document.createElement('canvas');
+  c.style.height = h+'px';
+  c.height = h;
+  container.appendChild(c);
+  // set pixel width after append
+  const W = container.clientWidth || 500;
+  c.width = W;
+  return {ctx: c.getContext('2d'), W, H:h, el:c};
+}
+
+function drawGrid(ctx, lx, rx, ty, by, nY) {
+  ctx.strokeStyle = C.grid;
+  ctx.lineWidth = 1;
+  for (let i=0;i<=nY;i++) {
+    const y = ty + (by-ty)*i/nY;
+    ctx.beginPath(); ctx.moveTo(lx,y); ctx.lineTo(rx,y); ctx.stroke();
+  }
+}
+
+function drawAxisLabels(ctx, lx, rx, ty, by, minV, maxV, nY, nX, xLabels, yUnit='') {
+  ctx.fillStyle = C.axis; ctx.font = '10px monospace'; ctx.textAlign = 'right';
+  for (let i=0;i<=nY;i++) {
+    const v = maxV - (maxV-minV)*i/nY;
+    const y = ty + (by-ty)*i/nY;
+    ctx.fillText(fmt1(v)+yUnit, lx-4, y+4);
+  }
+  ctx.textAlign = 'center';
+  if (xLabels) {
+    const step = (rx-lx)/xLabels.length;
+    xLabels.forEach((lb,i) => {
+      const x = lx + step*(i+0.5);
+      ctx.save(); ctx.translate(x, by+5); ctx.rotate(-Math.PI/5);
+      ctx.fillText(lb, 0, 10); ctx.restore();
+    });
+  }
+}
+
+function yPos(v, minV, maxV, ty, by) {
+  return by - (v-minV)/(maxV-minV)*(by-ty);
+}
+
+// ============ CHART 1: Recuperación Au vs Tiempo ============
+function chart1(container, data) {
+  const sorted = [...data].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if (!sorted.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, 240);
+  const L=60, R=W-20, T=20, B=H-55;
+  const maxV=100, minV=0;
+  drawGrid(ctx, L, R, T, B, 5);
+  // Reference line 90%
+  const y90 = yPos(90, minV, maxV, T, B);
+  ctx.strokeStyle = '#DC2626'; ctx.lineWidth = 1.5; ctx.setLineDash([5,4]);
+  ctx.beginPath(); ctx.moveTo(L, y90); ctx.lineTo(R, y90); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#DC2626'; ctx.font = '10px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('90%', R+2, y90+4);
+  // Axes
+  drawAxisLabels(ctx, L, R, T, B, minV, maxV, 5, sorted.length,
+    sorted.map(d=>d.codigo.replace('IM-SO-','')), '%');
+  // Lines per mina
+  ['Bonanza','Tenguel'].forEach(mina => {
+    const pts = sorted.filter(d=>d.mina===mina);
+    if (!pts.length) return;
+    const step = (R-L)/sorted.length;
+    ctx.strokeStyle = MINA_COLORS[mina]; ctx.lineWidth = 2;
+    ctx.beginPath();
+    pts.forEach((d,i) => {
+      const si = sorted.indexOf(d);
+      const x = L + step*(si+0.5);
+      const y = yPos(d.recuperacion_au_rechazo*100, minV, maxV, T, B);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+  });
+  // Dots
+  const step = (R-L)/sorted.length;
+  const hitAreas = [];
+  sorted.forEach((d,i) => {
+    const x = L + step*(i+0.5);
+    const y = yPos(d.recuperacion_au_rechazo*100, minV, maxV, T, B);
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
+    ctx.fillStyle = MINA_COLORS[d.mina]; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    hitAreas.push({x, y, r:8, html:`<b>${d.codigo}</b><br>Rec. Au: ${fmt1(d.recuperacion_au_rechazo*100)}%<br>Mina: ${d.mina}<br>Fecha: ${d.fecha}`});
+  });
+  // Legend
+  ctx.font='11px serif'; ctx.textAlign='left';
+  [['Bonanza', C.navy],['Tenguel', C.gold]].forEach(([nm,col],i) => {
+    ctx.fillStyle=col; ctx.fillRect(L+i*90, H-18, 12, 10);
+    ctx.fillStyle=C.axis; ctx.fillText(nm, L+i*90+15, H-8);
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 2: Ley Rechazo vs Ley Selectado ============
+function chart2(container, data) {
+  const sorted = [...data].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if (!sorted.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, 240);
+  const L=60, R=W-20, T=20, B=H-55;
+  const maxV = Math.max(...data.map(d=>d.ley_rechazo_calc))*1.1;
+  drawGrid(ctx, L, R, T, B, 5);
+  drawAxisLabels(ctx, L, R, T, B, 0, maxV, 5, sorted.length,
+    sorted.map(d=>d.codigo.replace('IM-SO-','')), '');
+  const bw = Math.max(4, ((R-L)/sorted.length - 4) / 2);
+  const hitAreas = [];
+  sorted.forEach((d,i) => {
+    const cx = L + (R-L)/sorted.length*(i+0.5);
+    const x1 = cx - bw - 1;
+    const x2 = cx + 1;
+    // Rechazo
+    const h1 = (d.ley_rechazo_calc/maxV)*(B-T);
+    ctx.fillStyle='#1E4D2B';
+    ctx.fillRect(x1, B-h1, bw, h1);
+    // Selectado
+    const h2 = (d.ley_selectado_calc/maxV)*(B-T);
+    ctx.fillStyle=C.orange;
+    ctx.fillRect(x2, B-h2, bw, h2);
+    hitAreas.push({x:cx,y:(B-Math.max(h1,h2)),r:20,html:`<b>${d.codigo}</b><br>Ley Rechazo: ${fmt2(d.ley_rechazo_calc)} gr/t<br>Ley Selectado: ${fmt2(d.ley_selectado_calc)} gr/t`});
+  });
+  ctx.font='11px serif'; ctx.textAlign='left';
+  [['Rechazo (gr/t)','#1E4D2B'],['Selectado (gr/t)',C.orange]].forEach(([nm,col],i) => {
+    ctx.fillStyle=col; ctx.fillRect(L+i*120, H-18, 12, 10);
+    ctx.fillStyle=C.axis; ctx.fillText(nm, L+i*120+15, H-8);
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 3: % Material Retenido ============
+function chart3(container, data) {
+  const sorted = [...data].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if (!sorted.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, 220);
+  const L=60, R=W-20, T=20, B=H-55;
+  const maxV = 50;
+  drawGrid(ctx, L, R, T, B, 5);
+  drawAxisLabels(ctx, L, R, T, B, 0, maxV, 5, sorted.length,
+    sorted.map(d=>d.codigo.replace('IM-SO-','')), '%');
+  const bw = Math.max(4, (R-L)/sorted.length*0.55);
+  const hitAreas = [];
+  sorted.forEach((d,i) => {
+    const pct = safeDiv(d.peso_retenido, d.peso_inicial)*100;
+    const col = pct < 15 ? C.green : pct < 25 ? C.yellow : C.red;
+    const x = L + (R-L)/sorted.length*(i+0.5) - bw/2;
+    const h = (pct/maxV)*(B-T);
+    ctx.fillStyle = col; ctx.fillRect(x, B-h, bw, h);
+    // value on bar
+    ctx.fillStyle='#fff'; ctx.font='bold 10px monospace'; ctx.textAlign='center';
+    if (h > 14) ctx.fillText(fmt1(pct)+'%', x+bw/2, B-h+12);
+    hitAreas.push({x:x+bw/2,y:B-h,r:20,html:`<b>${d.codigo}</b><br>Retenido: ${fmt1(pct)}%<br>(${d.peso_retenido} Kg)`});
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 4: Recuperación por Modelo (horizontal bars) ============
+function chart4(container, data) {
+  const byModel = {};
+  data.forEach(d => {
+    if (!byModel[d.modelo]) byModel[d.modelo]=[];
+    byModel[d.modelo].push(d.recuperacion_au_rechazo*100);
+  });
+  const entries = Object.entries(byModel).map(([m,vals])=>({m, v:avg(vals)}));
+  entries.sort((a,b)=>b.v-a.v);
+  if (!entries.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, Math.max(160, entries.length*60+60));
+  const L=200, R=W-40, T=20, B=H-30;
+  const maxV=100;
+  // Vertical grid
+  for (let i=0;i<=5;i++) {
+    const x = L+(R-L)*i/5;
+    ctx.strokeStyle=C.grid; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,B); ctx.stroke();
+    ctx.fillStyle=C.axis; ctx.font='10px monospace'; ctx.textAlign='center';
+    ctx.fillText(fmt1(maxV*i/5)+'%', x, B+14);
+  }
+  // Ref line 90%
+  const x90 = L+(90/maxV)*(R-L);
+  ctx.strokeStyle=C.red; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(x90,T); ctx.lineTo(x90,B); ctx.stroke();
+  ctx.setLineDash([]);
+  const bh = Math.min(28, (B-T)/entries.length*0.6);
+  const hitAreas = [];
+  entries.forEach((e,i) => {
+    const y = T + (B-T)/entries.length*(i+0.5) - bh/2;
+    const bw = (e.v/maxV)*(R-L);
+    ctx.fillStyle = MODEL_COLORS[e.m] || C.purple;
+    ctx.fillRect(L, y, bw, bh);
+    ctx.fillStyle='#fff'; ctx.font='bold 10px monospace'; ctx.textAlign='left';
+    if (bw>30) ctx.fillText(fmt1(e.v)+'%', L+bw-35, y+bh/2+4);
+    ctx.fillStyle=C.text; ctx.font='11px serif'; ctx.textAlign='right';
+    ctx.fillText(e.m, L-6, y+bh/2+4);
+    hitAreas.push({x:L+bw/2,y:y+bh/2,r:bh,html:`<b>${e.m}</b><br>Rec. Au prom: ${fmt1(e.v)}%<br>N ensayos: ${byModel[e.m].length}`});
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 5: Scatter Rec Au vs Reducción de Masa ============
+function chart5(container, data) {
+  if (!data.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, 240);
+  const L=60, R=W-20, T=20, B=H-55;
+  const maxX=80, minX=0, maxY=105, minY=0;
+  drawGrid(ctx, L, R, T, B, 5);
+  // Ref lines
+  const y90 = yPos(90, minY, maxY, T, B);
+  ctx.strokeStyle=C.red; ctx.lineWidth=1.5; ctx.setLineDash([5,3]);
+  ctx.beginPath(); ctx.moveTo(L,y90); ctx.lineTo(R,y90); ctx.stroke();
+  const x30 = L+(30/maxX)*(R-L);
+  ctx.strokeStyle=C.yellow;
+  ctx.beginPath(); ctx.moveTo(x30,T); ctx.lineTo(x30,B); ctx.stroke();
+  ctx.setLineDash([]);
+  // Axes
+  drawAxisLabels(ctx, L, R, T, B, minY, maxY, 5, 0, null, '%');
+  ctx.fillStyle=C.axis; ctx.font='10px monospace'; ctx.textAlign='center';
+  for (let i=0;i<=4;i++) {
+    const x = L+(R-L)*i/4;
+    ctx.fillText(fmt1(maxX*i/4)+'%', x, B+14);
+  }
+  ctx.save(); ctx.translate(14, (T+B)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('Rec. Au (%)', 0, 0); ctx.restore();
+  ctx.fillText('Reducción de Masa (%)', (L+R)/2, H-8);
+  const hitAreas = [];
+  data.forEach(d => {
+    const redMasa = safeDiv(d.peso_selectado, d.peso_inicial)*100;
+    const recAu = d.recuperacion_au_rechazo*100;
+    const x = L+(redMasa/maxX)*(R-L);
+    const y = yPos(recAu, minY, maxY, T, B);
+    ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
+    ctx.fillStyle = MODEL_COLORS[d.modelo]||C.purple;
+    ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    hitAreas.push({x,y,r:10,html:`<b>${d.codigo}</b><br>Modelo: ${d.modelo}<br>Red. Masa: ${fmt1(redMasa)}%<br>Rec. Au: ${fmt1(recAu)}%`});
+  });
+  // Legend models
+  const modList = [...new Set(data.map(d=>d.modelo))];
+  ctx.font='10px serif'; ctx.textAlign='left';
+  modList.forEach((m,i) => {
+    ctx.fillStyle = MODEL_COLORS[m]||C.purple;
+    ctx.fillRect(L+i*140, H-18, 10, 10);
+    ctx.fillStyle=C.axis; ctx.fillText(m, L+i*140+13, H-8);
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 6: Composición Rechazo/Selectado (barras apiladas) ============
+function chart6(container, data) {
+  const sorted = [...data].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if (!sorted.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, 240);
+  const L=50, R=W-20, T=20, B=H-55;
+  drawGrid(ctx, L, R, T, B, 5);
+  ctx.fillStyle=C.axis; ctx.font='10px monospace'; ctx.textAlign='right';
+  for (let i=0;i<=5;i++) {
+    const y = T+(B-T)*i/5;
+    ctx.fillText(fmt1(100-100*i/5)+'%', L-4, y+4);
+  }
+  const bw = Math.max(3, (R-L)/sorted.length*0.35);
+  const hitAreas = [];
+  sorted.forEach((d,i) => {
+    const cx = L+(R-L)/sorted.length*(i+0.5);
+    // Rechazo bar (left)
+    const totR = d.peso_rechazo || 1;
+    const rVpct = safeDiv(d.peso_rechazo_veta, totR)*100;
+    const rCpct = 100 - rVpct;
+    let y = B;
+    const hRV = (rVpct/100)*(B-T);
+    ctx.fillStyle=C.navy; ctx.fillRect(cx-bw-1, y-hRV, bw, hRV); y -= hRV;
+    const hRC = (rCpct/100)*(B-T);
+    ctx.fillStyle=C.gold; ctx.fillRect(cx-bw-1, y-hRC, bw, hRC);
+    // Selectado bar (right)
+    const totS = d.peso_selectado || 1;
+    const sVpct = safeDiv(d.peso_selectado_veta, totS)*100;
+    const sCpct = 100 - sVpct;
+    y = B;
+    const hSV = (sVpct/100)*(B-T);
+    ctx.fillStyle='rgba(30,58,95,0.4)'; ctx.fillRect(cx+1, y-hSV, bw, hSV); y-=hSV;
+    const hSC = (sCpct/100)*(B-T);
+    ctx.fillStyle='rgba(212,168,67,0.4)'; ctx.fillRect(cx+1, y-hSC, bw, hSC);
+    // label
+    ctx.fillStyle=C.axis; ctx.font='9px monospace'; ctx.textAlign='center';
+    ctx.fillText(d.codigo.replace('IM-SO-',''), cx, B+12);
+    hitAreas.push({x:cx,y:T,r:B-T,html:`<b>${d.codigo}</b><br>Rec — Veta: ${fmt1(rVpct)}% / Caja: ${fmt1(rCpct)}%<br>Sel — Veta: ${fmt1(sVpct)}% / Caja: ${fmt1(sCpct)}%`});
+  });
+  ctx.font='10px serif'; ctx.textAlign='left';
+  [[C.navy,'Veta-Rechazo'],[C.gold,'Caja-Rechazo'],['rgba(30,58,95,0.4)','Veta-Sel'],['rgba(212,168,67,0.4)','Caja-Sel']].forEach(([col,nm],i) => {
+    ctx.fillStyle=col; ctx.fillRect(L+i*85, H-18, 10, 10);
+    ctx.fillStyle=C.axis; ctx.fillText(nm, L+i*85+13, H-8);
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 7: Waterfall ============
+function chart7(container, data) {
+  if (!data.length) return;
+  const sorted = [...data].sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const d = sorted[0];
+  const {ctx, W, H, el} = makeCanvas(container, 260);
+  const L=60, R=W-20, T=20, B=H-60;
+  const steps = [
+    {label:'P. Inicial', val:d.peso_inicial, type:'start'},
+    {label:'−Retenido', val:-d.peso_retenido, type:'sub'},
+    {label:'−Rec. Veta', val:-d.peso_rechazo_veta, type:'sub'},
+    {label:'−Rec. Caja', val:-d.peso_rechazo_caja, type:'sub'},
+    {label:'−Sel. Veta', val:-d.peso_selectado_veta, type:'sub'},
+    {label:'−Sel. Caja', val:-d.peso_selectado_caja, type:'sub'},
+  ];
+  const maxV = d.peso_inicial*1.05;
+  drawGrid(ctx, L, R, T, B, 5);
+  drawAxisLabels(ctx, L, R, T, B, 0, maxV, 5, 0, null, '');
+  ctx.fillStyle=C.axis; ctx.font='10px monospace'; ctx.textAlign='right';
+  ctx.fillText('Kg', L-4, T-4);
+  const bw = (R-L)/steps.length*0.65;
+  const hitAreas = [];
+  let running = 0;
+  steps.forEach((s,i) => {
+    const x = L+(R-L)/steps.length*(i+0.5)-bw/2;
+    let base, top;
+    if (s.type==='start') {
+      base=0; top=s.val; running=s.val;
+    } else {
+      base=running+s.val; top=running; running+=s.val;
+    }
+    const yBase = yPos(base, 0, maxV, T, B);
+    const yTop = yPos(top, 0, maxV, T, B);
+    const barH = Math.abs(yTop-yBase);
+    const col = s.type==='start' ? C.navy : (i===1?C.slate:i<=3?'#1E4D2B':C.gold);
+    ctx.fillStyle=col; ctx.fillRect(x, Math.min(yTop,yBase), bw, barH);
+    // value
+    ctx.fillStyle='#fff'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+    if (barH>12) ctx.fillText(fmt1(Math.abs(s.val)), x+bw/2, Math.min(yTop,yBase)+barH/2+4);
+    ctx.fillStyle=C.axis; ctx.font='9px monospace';
+    ctx.save(); ctx.translate(x+bw/2, B+8); ctx.rotate(-Math.PI/5);
+    ctx.fillText(s.label, 0, 10); ctx.restore();
+    hitAreas.push({x:x+bw/2,y:Math.min(yTop,yBase),r:barH/2+10,html:`<b>${s.label}</b><br>${fmt2(Math.abs(s.val))} Kg`});
+  });
+  ctx.fillStyle=C.muted; ctx.font='10px serif'; ctx.textAlign='left';
+  ctx.fillText('Prueba: '+d.codigo+' ('+d.fecha+')', L, H-5);
+  addTooltip(el, hitAreas);
+}
+
+// ============ CHART 8: Ratio Enriquecimiento ============
+function chart8(container, data) {
+  const sorted = [...data].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if (!sorted.length) return;
+  const {ctx, W, H, el} = makeCanvas(container, 220);
+  const L=60, R=W-20, T=20, B=H-55;
+  const maxV = Math.max(20, Math.max(...data.map(d=>safeDiv(d.ley_rechazo_calc,d.ley_selectado_calc)))*1.15);
+  drawGrid(ctx, L, R, T, B, 5);
+  drawAxisLabels(ctx, L, R, T, B, 0, maxV, 5, sorted.length,
+    sorted.map(d=>d.codigo.replace('IM-SO-','')), '×');
+  // Ref 5×
+  const y5 = yPos(5, 0, maxV, T, B);
+  ctx.strokeStyle=C.green; ctx.lineWidth=1.5; ctx.setLineDash([5,3]);
+  ctx.beginPath(); ctx.moveTo(L,y5); ctx.lineTo(R,y5); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=C.green; ctx.font='10px monospace'; ctx.textAlign='left';
+  ctx.fillText('5×', R+2, y5+4);
+  const bw = Math.max(4, (R-L)/sorted.length*0.55);
+  const hitAreas = [];
+  sorted.forEach((d,i) => {
+    const ratio = safeDiv(d.ley_rechazo_calc, d.ley_selectado_calc);
+    const col = ratio>=5?C.green:ratio>=2?C.yellow:C.red;
+    const x = L+(R-L)/sorted.length*(i+0.5)-bw/2;
+    const h = (ratio/maxV)*(B-T);
+    ctx.fillStyle=col; ctx.fillRect(x, B-h, bw, h);
+    ctx.fillStyle='#fff'; ctx.font='bold 9px monospace'; ctx.textAlign='center';
+    if (h>13) ctx.fillText(fmt1(ratio)+'×', x+bw/2, B-h+11);
+    hitAreas.push({x:x+bw/2,y:B-h,r:20,html:`<b>${d.codigo}</b><br>Ratio: ${fmt2(ratio)}×<br>Ley Rec: ${fmt2(d.ley_rechazo_calc)}<br>Ley Sel: ${fmt2(d.ley_selectado_calc)}`});
+  });
+  addTooltip(el, hitAreas);
+}
+
+// ============ TOOLTIP ENGINE ============
+function addTooltip(canvas, areas) {
+  const tip = document.createElement('div');
+  tip.className = 'tooltip-overlay';
+  canvas.parentNode.style.position = 'relative';
+  canvas.parentNode.appendChild(tip);
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX-rect.left)*(canvas.width/rect.width);
+    const my = (e.clientY-rect.top)*(canvas.height/rect.height);
+    let found = null;
+    for (const a of areas) {
+      const dist = Math.sqrt((mx-a.x)**2+(my-a.y)**2);
+      if (dist < (a.r||12)) { found = a; break; }
+    }
+    if (found) {
+      tip.innerHTML = found.html;
+      tip.style.display = 'block';
+      const tx = Math.min(e.clientX-rect.left+12, rect.width-180);
+      const ty = Math.max(e.clientY-rect.top-50, 5);
+      tip.style.left = tx+'px';
+      tip.style.top = ty+'px';
+    } else {
+      tip.style.display = 'none';
+    }
+  });
+  canvas.addEventListener('mouseleave', () => tip.style.display='none');
+}
+
+// ============ MAIN RENDER ============
+const CHART_DEFS = [
+  {id:'c1', title:'1. Recuperación Au vs Tiempo', fn: chart1},
+  {id:'c2', title:'2. Ley Rechazo vs Ley Selectado (gr/t)', fn: chart2},
+  {id:'c3', title:'3. % Material Retenido por Prueba', fn: chart3},
+  {id:'c4', title:'4. Recuperación por Modelo (promedio)', fn: chart4},
+  {id:'c5', title:'5. Scatter: Rec. Au vs Reducción de Masa', fn: chart5},
+  {id:'c6', title:'6. Composición Rechazo & Selectado (%)', fn: chart6},
+  {id:'c7', title:'7. Balance de Masas — Waterfall (última prueba)', fn: chart7},
+  {id:'c8', title:'8. Ratio de Enriquecimiento por Prueba', fn: chart8},
+];
+
+function render() {
+  // Badge
+  document.getElementById('badge').textContent = filtered.length+' ensayo'+(filtered.length===1?'':'s')+' activo'+(filtered.length===1?'':'s');
+  // KPIs
+  const kpis = computeKPIs(filtered);
+  renderKPIs(kpis);
+  // Charts
+  const grid = document.getElementById('charts-grid');
+  const emptyMsg = document.getElementById('empty-msg');
+  grid.innerHTML = '';
+  if (!filtered.length) {
+    emptyMsg.style.display='block';
+    return;
+  }
+  emptyMsg.style.display='none';
+  CHART_DEFS.forEach(def => {
+    const card = document.createElement('div');
+    card.className = 'chart-card';
+    card.innerHTML = `<div class="chart-title">${def.title}</div>`;
+    const wrap = document.createElement('div');
+    wrap.className = 'chart-container';
+    card.appendChild(wrap);
+    grid.appendChild(card);
+    // defer to allow layout
+    setTimeout(() => {
+      def.fn(wrap, filtered);
+    }, 0);
+  });
+}
+
+// Initial render
+render();
+</script>
+</body>
+</html>

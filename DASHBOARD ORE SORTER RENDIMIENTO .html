@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ore Sorter — Balance Metalúrgico</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="header">
+  <h1>⛏ Dashboard Ore Sorter — Balance Metalúrgico</h1>
+  <p>Evaluación de rendimiento del equipo de clasificación de mineral aurífero · Minas Bonanza & Tenguel</p>
+</div>
+
+<div class="filtros-bar" id="filtrosBar">
+  <div class="filtro-grupo">
+    <label>Mina</label>
+    <select id="filtroMina">
+      <option value="Todas">Todas</option>
+      <option value="Bonanza">Bonanza</option>
+      <option value="Tenguel">Tenguel</option>
+    </select>
+  </div>
+  <div class="filtro-grupo">
+    <label>Modelo IA</label>
+    <select id="filtroModelo"><option value="Todos">Todos</option></select>
+  </div>
+  <div class="filtro-grupo">
+    <label>Desde</label>
+    <input type="date" id="filtroDesde">
+  </div>
+  <div class="filtro-grupo">
+    <label>Hasta</label>
+    <input type="date" id="filtroHasta">
+  </div>
+  <button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar Filtros</button>
+</div>
+
+
+<div class="main">
+  <div class="kpi-grid" id="kpiGrid"></div>
+  <div class="chart-grid" id="chartGrid">
+    <div class="chart-card"><h3>1 · Recuperación Au vs Tiempo</h3><canvas id="chart1"></canvas></div>
+    <div class="chart-card"><h3>2 · Ley Rechazo vs Selectado vs Cabeza</h3><canvas id="chart2"></canvas></div>
+    <div class="chart-card"><h3>3 · % Material Retenido vs Tiempo</h3><canvas id="chart3"></canvas></div>
+    <div class="chart-card"><h3>4 · Recuperación Au por Modelo</h3><canvas id="chart4"></canvas></div>
+    <div class="chart-card"><h3>5 · Recuperación Au vs Reducción de Masa</h3><canvas id="chart5"></canvas></div>
+    <div class="chart-card"><h3>6 · Composición Rechazo y Selectado</h3><canvas id="chart6"></canvas></div>
+    <div class="chart-card"><h3>7 · Balance de Masas Waterfall (Última Prueba)</h3><canvas id="chart7"></canvas></div>
+    <div class="chart-card"><h3>8 · Ratio de Enriquecimiento por Prueba</h3><canvas id="chart8"></canvas></div>
+  </div>
+</div>
+
+<script src="js/scritps.js"></script>
+</body>
+</html>
