@@ -1,6 +1,7 @@
 from openpyxl import load_workbook
+import os
 
-URL_PATH_EXCEL = r'C:\Users\josue\OneDrive - Grupo Minero Bonanza\ROBIOTEC\SMART SORTER\DASHBOARD IA\rendimiento.xlsx'
+URL_PATH_EXCEL = r'rendimiento.xlsx'
 
 def read_xlss_excel(archivo):
     wb = load_workbook(archivo)
@@ -11,5 +12,12 @@ def read_xlss_excel(archivo):
     columna_b = [celda.value for celda in ws['B']]
     print(columna_b)
 
+# Extracción de rutas relativas
+def extract_relative_paths():
+    url_project = os.path.dirname(os.path.abspath(__file__))
+    url_excel = os.path.join(url_project, URL_PATH_EXCEL)
+    return url_excel
+
 if __name__ == '__main__':
-    read_xlss_excel(URL_PATH_EXCEL)
+    url_excel = extract_relative_paths()
+    read_xlss_excel(url_excel)
